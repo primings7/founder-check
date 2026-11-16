@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>창업가 역량 진단 관리자</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@600;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* 레이아웃: 좁은 한 단(최대 760px) 진단지. 카드는 질문 묶음에만, 강조색은 선택 상태와 그래프에만 쓴다 */
+  --paper:#F2F5F4; --surface:#FFFFFF; --ink:#16212A; --muted:#5A6870; --line:#D3DBD8;
+  --accent:#0B6E5E; --accent-ink:#FFFFFF; --accent-soft:#DDEFEA; --second:#3A5BA0; --second-soft:#E2E9F6;
+  --warn:#A8500C; --warn-soft:#FBEBDD;
+  --display:"Hahmlet","Noto Serif KR","Apple SD Gothic Neo",serif;
+  --body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0F1615; --surface:#182220; --ink:#E7EDEB; --muted:#9BABA7; --line:#2C3A37;
+  --accent:#58C7B0; --accent-ink:#06211C; --accent-soft:#1D3A34; --second:#8FB0F0; --second-soft:#222F4A;
+  --warn:#F2A766; --warn-soft:#3A2A1B; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --paper:#0F1615; --surface:#182220; --ink:#E7EDEB; --muted:#9BABA7; --line:#2C3A37;
+  --accent:#58C7B0; --accent-ink:#06211C; --accent-soft:#1D3A34; --second:#8FB0F0; --second-soft:#222F4A;
+  --warn:#F2A766; --warn-soft:#3A2A1B; color-scheme:dark;}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.65;word-break:keep-all;overflow-wrap:anywhere}
+.wrap{max-width:760px;margin:0 auto;padding:20px 16px 56px;display:flex;flex-direction:column;gap:16px}
+header.top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;padding:4px 2px}
+header.top h1{font-family:var(--display);font-size:20px;margin:0;font-weight:700}
+header.top span{color:var(--muted);font-size:13px}
+#progress{list-style:none;display:flex;gap:6px;margin:0;padding:0;overflow-x:auto}
+#progress li{flex:1 0 auto;display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);padding:6px 10px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+#progress li span{font-variant-numeric:tabular-nums;font-weight:600}
+#progress li.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+#progress li.done{background:var(--accent-soft);color:var(--ink);border-color:transparent}
+#view{display:flex;flex-direction:column;gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px 20px;display:flex;flex-direction:column;gap:12px}
+.card>*{margin:0}
+h2{font-family:var(--display);font-size:26px;line-height:1.3;font-weight:700;text-wrap:balance;outline:none}
+h3{font-size:18px;font-weight:600}
+h4{font-size:15px;font-weight:600;margin:8px 0 0;color:var(--accent)}
+p{margin:0}
+.lead{font-size:17px}
+.eyebrow{font-size:13px;font-weight:600;color:var(--accent);letter-spacing:.02em}
+.fine{font-size:13px;color:var(--muted)}
+.hero{border-top:4px solid var(--accent)}
+.parts{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;counter-reset:p}
+.parts li{counter-increment:p;border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column}
+.parts li b::before{content:counter(p) ". "}
+.parts li span{font-size:13px;color:var(--muted)}
+.field{display:flex;flex-direction:column;gap:6px;font-weight:500}
+.field .opt{font-weight:400;color:var(--muted);border:0;padding:0;background:none}
+input[type=text],textarea{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:11px 12px;width:100%}
+textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.5;resize:vertical;word-break:break-all}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{font:inherit;font-weight:600;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);border-radius:10px;padding:11px 18px;cursor:pointer;text-decoration:none;display:inline-block}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--second);outline-offset:2px}
+.nav{display:flex;align-items:center;gap:12px;position:sticky;bottom:0;background:var(--paper);padding:12px 0;border-top:1px solid var(--line)}
+.nav .left{flex:1;text-align:center;font-size:13px;color:var(--muted)}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font:inherit;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:9px 16px;cursor:pointer}
+.chip.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.chip.sm{padding:6px 12px;font-size:14px}
+.chip.big{border-radius:12px;flex:1 1 130px;display:flex;flex-direction:column;align-items:center;font-size:22px;font-weight:600;padding:12px}
+.chip.big small{font-size:12px;font-weight:400;opacity:.85}
+.letters{display:flex;flex-direction:column;gap:10px}
+.q{display:flex;flex-direction:column;gap:10px;padding:16px 0;border-top:1px solid var(--line)}
+.q:first-of-type{border-top:0;padding-top:4px}
+.qt{font-weight:600;display:flex;gap:10px}
+.qt .num{flex:none;font-variant-numeric:tabular-nums;color:var(--accent);min-width:1.6em}
+.nav.end{position:static;border-top:0}
+.ab,.opts{display:grid;gap:8px}
+.ab{grid-template-columns:1fr 1fr}
+.opt{font:inherit;text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:12px 14px;cursor:pointer;position:relative}
+.opt:hover{border-color:var(--accent)}
+.opt.on{border-color:var(--accent);background:var(--accent-soft);font-weight:500}
+.opt.rank{padding-right:68px}
+.opt.rank.r1{border-color:var(--second);background:var(--second-soft)}
+.badge{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;font-weight:600;color:var(--accent)}
+.r1 .badge{color:var(--second)}
+.legend{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px;font-size:14px}
+.legend b{color:var(--accent)}
+.task{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 0;border-top:1px solid var(--line)}
+.task p{flex:1 1 220px;font-weight:500}
+.flags{display:flex;gap:6px;flex-wrap:wrap}
+.chart{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.radar{flex:1 1 240px;max-width:300px;width:100%;height:auto}
+.radar .grid{fill:none;stroke:var(--line);stroke-width:1}
+.radar .shape{fill:var(--accent);fill-opacity:.22;stroke:var(--accent);stroke-width:2.5;stroke-linejoin:round}
+.radar .dot{fill:var(--accent)}
+.radar .lab{fill:var(--ink);font-size:14px;font-weight:600;font-family:var(--body)}
+.radar .tick{fill:var(--muted);font-size:10px;font-family:var(--body)}
+.bars{list-style:none;margin:0;padding:0;flex:1 1 260px;display:flex;flex-direction:column;gap:10px}
+.bars li{display:grid;grid-template-columns:3em 1fr 2em;gap:4px 10px;align-items:center}
+.bn{font-weight:600}.bv{font-variant-numeric:tabular-nums;text-align:right;font-weight:600}
+.bt{height:10px;background:var(--paper);border-radius:999px;overflow:hidden;border:1px solid var(--line)}
+.bt i{display:block;height:100%;background:var(--accent);border-radius:999px}
+.bd{grid-column:1/-1;font-size:13px;color:var(--muted)}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.two.in{gap:8px 24px}
+.list{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px}
+.list.good li::marker{color:var(--accent)}.list.warn li::marker{color:var(--warn)}
+.list small{display:block;color:var(--muted);font-size:13px}
+.pill{display:inline-block;background:var(--accent-soft);border-radius:8px;padding:2px 10px;font-weight:600;letter-spacing:.08em}
+.kv{font-weight:600}
+.facts{margin:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.facts.wide{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.facts div{border-left:3px solid var(--accent-soft);padding-left:10px}
+.facts dt{font-size:13px;color:var(--muted)}
+.facts dd{margin:0;font-weight:600}
+.facts dd small{display:block;font-weight:400;font-size:13px;color:var(--muted)}
+.alert{background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:10px 14px;font-weight:500}
+.code{display:flex;flex-direction:column;gap:8px}
+.code label{font-weight:600;font-size:14px}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:520px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:13px;color:var(--muted);font-weight:600;white-space:nowrap}
+td.n{font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.pick td{background:var(--accent-soft)}
+footer{font-size:13px;color:var(--muted);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:0 2px}
+footer a{color:var(--muted)}
+@media (max-width:480px){h2{font-size:22px}.ab{grid-template-columns:1fr}.card{padding:18px 16px}}
+@media (prefers-reduced-motion:no-preference){.opt,.chip,.btn{transition:background-color .12s,border-color .12s}}
+.field .optional{font-weight:400;color:var(--muted)}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:15px}
+.check input{width:20px;height:20px;margin-top:3px;flex:none;accent-color:var(--accent)}
+.row.between{justify-content:space-between}
+.btn.sm{padding:6px 12px;font-size:14px}
+.tag{font-size:12px;color:var(--accent);background:var(--accent-soft);border-radius:6px;padding:1px 6px;white-space:nowrap}
+.thanks{align-items:center;text-align:center;padding:64px 20px}
+#preview{background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:10px 14px;font-size:14px;font-weight:500}
+.wrap.wide{max-width:980px}
+.login{max-width:440px}
+.form{display:flex;flex-direction:column;gap:12px}
+input[type=email],input[type=password]{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:11px 12px;width:100%}
+</style>
+</head>
+<body>
+<div class="wrap wide">
+  <header class="top"><h1>창업가 역량 진단 관리자</h1><span>프라이밍스 스타트업 멘토링</span></header>
+  <p id="preview" hidden>DB가 아직 연결되지 않은 미리보기 화면입니다. 아래 응답은 실제 응답이 아닌 예시입니다.</p>
+  
+  <main id="view"></main>
+</div>
+<script src="supabase.js"></script>
+<script src="config.js"></script>
+<script>
+/* ===== 문항 (직장 경험이 없는 대학생도 답할 수 있는 말로 작성, 자체 제작) ===== */
+
+/* 1부. 성향: 4개 지표 × 5문항. a = 앞 글자, b = 뒤 글자 */
+const P_AXES = [["E", "I"], ["S", "N"], ["T", "F"], ["J", "P"]];
+const P_ITEMS = [
+  { ax: 0, q: "막히는 문제가 생기면", a: "누군가에게 말하면서 생각을 정리한다", b: "혼자 생각을 정리한 뒤에 말한다" },
+  { ax: 1, q: "내 아이디어를 설명할 때", a: "지금 확인된 사실과 예시부터 말한다", b: "앞으로의 가능성과 큰 그림부터 말한다" },
+  { ax: 2, q: "같이 하는 친구의 결과물이 기대에 못 미칠 때", a: "무엇이 문제인지 바로 말해 준다", b: "친구의 상황과 기분을 먼저 살핀다" },
+  { ax: 3, q: "한 주를 보내는 방식은", a: "미리 계획을 세우고 그대로 움직인다", b: "상황을 보며 그때그때 정한다" },
+  { ax: 0, q: "사람이 많은 모임에 다녀온 날은", a: "오히려 기운이 난다", b: "혼자 쉬는 시간이 필요하다" },
+  { ax: 1, q: "새로운 것을 배울 때", a: "알려 준 방법을 순서대로 따라 한다", b: "원리를 이해한 뒤 내 방식으로 한다" },
+  { ax: 2, q: "어려운 결정을 할 때 더 중요하게 보는 것은", a: "기준과 논리에 맞는가", b: "주변 사람들에게 어떤 영향을 주는가" },
+  { ax: 3, q: "과제처럼 마감이 있는 일은", a: "여유 있게 미리 끝낸다", b: "마감이 가까워져야 몰아서 한다" },
+  { ax: 0, q: "처음 보는 사람이 많은 자리에서", a: "먼저 말을 거는 편이다", b: "상대가 말을 걸어 오면 편하다" },
+  { ax: 1, q: "자료를 볼 때 먼저 눈에 들어오는 것은", a: "구체적인 숫자와 세부 내용", b: "전체 흐름과 숨은 의미" },
+  { ax: 2, q: "더 듣고 싶은 말은", a: "일을 정확하게 잘한다", b: "함께하기 좋은 사람이다" },
+  { ax: 3, q: "계획이 갑자기 바뀌면", a: "불편하고 다시 정리하고 싶다", b: "새로운 상황이 오히려 재미있다" },
+  { ax: 0, q: "집중이 가장 잘 되는 환경은", a: "사람들과 의견을 주고받는 자리", b: "조용히 혼자 있는 자리" },
+  { ax: 1, q: "판단할 때 더 믿는 것은", a: "직접 겪은 경험", b: "문득 떠오르는 직감" },
+  { ax: 2, q: "의견이 부딪칠 때", a: "어느 쪽이 맞는지 따져 본다", b: "서로 받아들일 수 있는 지점을 찾는다" },
+  { ax: 3, q: "정해야 할 일이 있으면", a: "빨리 정하고 넘어가야 편하다", b: "선택지를 열어 두는 편이 편하다" },
+  { ax: 0, q: "생각이 정리되는 때는", a: "말을 하는 도중", b: "말을 꺼내기 전" },
+  { ax: 1, q: "조별 모임에서 더 자주 하는 말은", a: "그래서 구체적으로 뭘 하면 되죠?", b: "이걸 다르게 볼 수는 없을까요?" },
+  { ax: 2, q: "부탁을 거절해야 할 때", a: "이유를 분명히 말하고 끝낸다", b: "사이가 나빠지지 않게 말을 고른다" },
+  { ax: 3, q: "내 방과 파일은", a: "정해진 자리에 정리해 둔다", b: "필요할 때 찾으면 된다고 생각한다" }
+];
+
+/* 2부. 일하는 방식: 상황 12개 × 선택지 4개. 축 X 발상 · D 돌파 · V 검증 · O 운영. 1순위 2점, 2순위 1점 */
+const W_KEYS = ["X", "D", "V", "O"];
+const W_NAME = { X: "발상", D: "돌파", V: "검증", O: "운영" };
+const W_DESC = {
+  X: "새 기회와 아이디어를 찾는 힘",
+  D: "사람을 움직여 빠르게 밀고 나가는 힘",
+  V: "근거를 확인하고 위험을 걸러내는 힘",
+  O: "체계를 세워 끝까지 마무리하는 힘"
+};
+const W_ITEMS = [
+  { q: "해 보고 싶은 아이디어가 떠올랐을 때 가장 먼저 하는 일은", o: [["V", "비슷한 것이 이미 있는지 찾아본다"], ["X", "다른 방법은 없는지 여러 개 더 떠올린다"], ["O", "해야 할 일을 목록으로 적고 일정을 잡는다"], ["D", "주변에 말해 반응을 보고 같이 할 사람을 찾는다"]] },
+  { q: "조별 과제나 동아리 회의에서 내가 주로 맡는 역할은", o: [["D", "결론을 내고 누가 언제까지 할지 정하게 만든다"], ["O", "내용을 정리하고 그 뒤 진행을 챙긴다"], ["X", "새로운 생각이나 다른 방법을 낸다"], ["V", "빠진 점과 문제가 될 부분을 짚는다"]] },
+  { q: "하루가 통째로 비었다면 하고 싶은 일은", o: [["X", "새로 해 보고 싶은 일을 구상한다"], ["V", "궁금했던 것을 자료를 찾아 깊이 알아본다"], ["D", "사람들을 만나 내 생각을 이야기한다"], ["O", "밀린 일을 끝내고 주변을 정리한다"]] },
+  { q: "일이 계획대로 풀리지 않을 때", o: [["O", "계획을 다시 나눠 하나씩 처리한다"], ["D", "일단 밀고 나가며 도와줄 사람을 찾는다"], ["V", "어디서 잘못됐는지 원인부터 따진다"], ["X", "방법 자체를 바꿔 본다"]] },
+  { q: "내가 가장 뿌듯한 순간은", o: [["V", "내 예상이 정확히 맞아떨어졌을 때"], ["O", "맡은 일을 실수 없이 끝냈을 때"], ["D", "안 될 것 같던 사람을 설득해 냈을 때"], ["X", "아무도 생각하지 못한 방법을 찾았을 때"]] },
+  { q: "공모전이나 발표 과제를 팀으로 준비한다면 내가 가장 잘할 부분은", o: [["X", "남다른 주제와 아이디어 내기"], ["D", "발표하고 질문에 답하기"], ["O", "일정 관리와 제출 서류 챙기기"], ["V", "자료 조사와 근거 찾기"]] },
+  { q: "주변 사람들이 나에게 자주 하는 말은", o: [["D", "추진력이 좋다"], ["X", "아이디어가 많다"], ["V", "꼼꼼하고 날카롭다"], ["O", "믿고 맡길 수 있다"]] },
+  { q: "가장 답답한 상황은", o: [["O", "정해 놓은 것이 자꾸 바뀔 때"], ["V", "근거 없이 느낌만으로 정할 때"], ["X", "늘 하던 방식만 되풀이할 때"], ["D", "결정은 안 나고 이야기만 길어질 때"]] },
+  { q: "팀 발표를 일주일 앞두고 내가 가장 신경 쓰는 것은", o: [["D", "누구에게 어떻게 알리고 보여줄지"], ["V", "미리 해 봤을 때 나온 문제와 사람들의 반응"], ["O", "준비물 점검과 마무리 작업"], ["X", "하나 더 넣고 싶은 새로운 내용"]] },
+  { q: "내가 만든 것에 누군가 불만을 말했을 때", o: [["X", "이 불만에서 새로운 아이디어를 얻는다"], ["O", "같은 일이 다시 생기지 않게 방법을 정해 둔다"], ["D", "바로 찾아가 직접 이야기해 푼다"], ["V", "다른 사람들도 같은 불만이 있는지 확인한다"]] },
+  { q: "돈과 시간이 조금 남는다면 쓰고 싶은 곳은", o: [["V", "사람들이 무엇을 원하는지 알아보는 조사"], ["D", "더 많은 사람에게 알리고 만나는 일"], ["X", "새로운 것을 시도해 보는 실험"], ["O", "일하는 방식을 정리하고 편하게 만드는 일"]] },
+  { q: "무언가를 할 때 가장 중요하게 여기는 것은", o: [["O", "끝까지 마무리하는 것"], ["X", "새로운 것을 만드는 것"], ["D", "빠르게 움직이는 것"], ["V", "정확하게 하는 것"]] }
+];
+
+/* 3부. AI 활용과 창업 준비 12문항. 선택지 수와 순서는 공통 기준서 v1.1과 같고 말만 쉽게 바꿈 */
+const S_ITEMS = [
+  { q: "지금 창업 준비는 어디까지 왔나요?", o: ["아이디어를 찾거나 생각하는 단계", "아이디어가 있고, 사람들에게 물어보거나 시제품을 준비하는 단계", "사업을 시작했고, 아직 매출이 없거나 조금 있는 단계", "매출이 꾸준히 나고 커지는 단계"] },
+  { q: "앞으로 6개월 동안 가장 이루고 싶은 것 하나는?", o: ["창업 지원 프로그램(정부지원사업·공모전)에 선정되기", "첫 제품이나 서비스(시제품) 만들기", "첫 고객 만나기, 첫 매출 내기", "더 많이 알리고 매출 키우기", "팀과 일하는 방식 정리하기, 반복되는 일 자동화하기"] },
+  { q: "AI를 함께 쓸 사람은 몇 명인가요? (나 포함)", o: ["나 혼자", "2명", "3~5명", "6명 이상"] },
+  { q: "AI(ChatGPT·Claude·Gemini 등)를 얼마나 쓰나요?", o: ["거의 안 쓴다", "가끔 궁금한 것을 물어본다", "일주일에 3번 이상, 글 초안을 쓰거나 요약할 때 쓴다", "거의 매일 쓰고, 내 자료를 올리거나 지시문을 저장해 두는 기능까지 쓴다", "AI 여러 개에 역할을 나눠 주거나, 알아서 돌아가게 자동화를 만들어 봤다"] },
+  { q: "AI가 만든 결과물을 거의 그대로 과제나 실제 일에 쓴 적이 있나요?", o: ["없다", "한두 번", "자주"] },
+  { q: "AI 활용법을 익히고 준비하는 데 일주일에 몇 시간을 쓸 수 있나요?", o: ["2시간 미만", "2~5시간", "5시간 이상"] },
+  { q: "AI 서비스 이용료로 한 달에 얼마까지 쓸 수 있나요?", o: ["3만 원 이하", "3만~10만 원", "10만~30만 원", "30만 원 이상"] },
+  { q: "내가 만든 최신 자료(기획서·발표 자료 등)를 1분 안에 찾을 수 있나요?", o: ["아니다, 여기저기 흩어져 있다", "대체로 찾는다", "정해 둔 폴더와 파일 이름 규칙이 있다"] },
+  { q: "여러 가지 일을 동시에 진행해야 할 때가 있나요?", o: ["거의 없다", "가끔", "자주"] },
+  { q: "메일·메신저·파일 보관함에서 AI가 알아서 처리해 주면 좋겠다고 생각하는 일이 있나요?", o: ["없다", "있으면 좋다", "꼭 필요하다"] },
+  { q: "최근 3개월 동안 내가 하던 일을 다른 사람에게 넘기거나 넘겨받은 적이 있나요?", o: ["없었다", "1~2번", "3번 이상"] },
+  { q: "준비하는 분야에 대한 경험과 고객에 대한 이해는 어느 정도인가요?", o: ["처음 해 보는 분야", "관련 경험 1~3년", "3년 이상, 고객을 잘 안다"] }
+];
+
+/* ===== 채점 (관리자 화면 전용) ===== */
+/* --- 4부. 업무 체크 24개 → AI 직원 13종 (세부 실행편 v1.1 3.2) --- */
+const AREAS = ["A 자금·사업계획", "B 시장·고객 이해", "C 제품·MVP", "D 마케팅·영업", "E 고객 응대", "F 조직·운영"];
+const T_ITEMS = [
+  [0, "지원사업 공고 찾기·일정 관리", "지원사업 비서", "지원할 사업 최종 선택", "B"],
+  [0, "사업계획서·신청서 작성", "사업계획 작가", "핵심 주장·숫자 결정, 제출", "C"],
+  [0, "발표·피칭 준비", "심사위원·피칭 코치", "실제 리허설과 발표", "B"],
+  [0, "IR 자료·재무 추정", "BM·재무·IR 분석가", "가정 확정, 투자자 미팅", "C"],
+  [1, "시장·경쟁사 조사", "리서처", "출처 원문 확인", "A"],
+  [1, "고객 인터뷰 정리·분석", "리서처", "인터뷰 진행, 해석", "A"],
+  [1, "수익 모델·가격·수익성 분석", "BM·재무·IR 분석가", "가격·전략 결정", "C"],
+  [1, "경쟁·정책 동향 챙기기", "리서처", "대응 결정", "A"],
+  [2, "MVP 기획 (기능 정리·기획서)", "MVP 기획자", "범위 확정", "B"],
+  [2, "화면·디자인 시안, 브랜드", "디자이너", "최종 시안 선택", "B"],
+  [2, "시제품·랜딩페이지 만들기", "MVP 기획자", "테스트, 공개 결정", "C"],
+  [2, "외주 발주·관리", "MVP 기획자", "업체 선정, 계약", "C"],
+  [3, "SNS·블로그 콘텐츠 만들기", "콘텐츠 작가", "발행 승인", "C"],
+  [3, "광고·채널 성과 분석", "마케터", "예산 배분", "B"],
+  [3, "영업 제안서·미팅 후속 메일", "영업 지원", "가격·납기 확인, 발송", "C"],
+  [3, "뉴스레터·콘텐츠 재가공", "콘텐츠 작가", "발송 승인", "C"],
+  [4, "고객 문의 답변·FAQ 정리", "고객 응대", "답변 승인, 환불·계약 예외", "C"],
+  [4, "고객 후기·불만 분석", "고객 응대", "개선 우선순위 결정", "B"],
+  [5, "회의록·주간 보고", "운영 담당", "의사결정", "A"],
+  [5, "일정·할 일 관리", "운영 담당", "우선순위 결정", "A"],
+  [5, "채용 (공고·면접 준비)", "피플 매니저", "면접, 합격 결정", "C"],
+  [5, "평가·운영 규정 만들기", "피플 매니저", "규정 확정 (노무 검토)", "C"],
+  [5, "경비·정산·행정 서류", "운영 담당", "집행·승인", "B"],
+  [5, "사업비 집행·결과 보고", "지원사업 비서", "집행, 보고서 제출", "C"]
+];
+const T_FLAGS = [["시간", "주 2시간 이상 쓴다"], ["반복", "매주 반복된다"], ["못함", "해야 하는데 못 하고 있다"], ["목표", "6개월 목표에 꼭 필요하다"]];
+const AGENTS = ["지원사업 비서", "사업계획 작가", "심사위원·피칭 코치", "BM·재무·IR 분석가", "리서처", "MVP 기획자", "디자이너", "콘텐츠 작가", "마케터", "영업 지원", "고객 응대", "운영 담당", "피플 매니저"];
+
+/* 약한 축을 메우는 AI 직원 */
+const AXIS_AGENTS = {
+  X: ["리서처", "콘텐츠 작가", "MVP 기획자"],
+  D: ["영업 지원", "마케터", "심사위원·피칭 코치"],
+  V: ["리서처", "BM·재무·IR 분석가", "심사위원·피칭 코치"],
+  O: ["운영 담당", "지원사업 비서", "피플 매니저"]
+};
+const AXIS_AGENT_WHY = {
+  X: "새 관점과 사례를 계속 공급해 발상을 넓힘",
+  D: "대외 접촉의 초안과 준비를 대신해 실행 문턱을 낮춤",
+  V: "근거 수집과 반대 의견을 맡아 감에 의존한 결정을 줄임",
+  O: "일정·기록·증빙을 챙겨 마감과 누락을 관리함"
+};
+
+/* --- 채점 --- */
+function scorePersonality(p) {
+  // p = {mode:'k', t:'ENTJ'} 또는 {mode:'q', a:[0|1 × 20]} (0 = 앞 글자)
+  if (p.mode === "k") return { type: p.t, counts: null, source: "본인이 아는 유형 입력" };
+  const c = [[0, 0], [0, 0], [0, 0], [0, 0]];
+  P_ITEMS.forEach((it, i) => { c[it.ax][p.a[i]]++; });
+  const type = c.map((x, i) => P_AXES[i][x[0] >= 3 ? 0 : 1]).join("");
+  return { type, counts: c, source: "간이 성향 체크 20문항" };
+}
+
+function scoreWork(w) {
+  // w = [[1순위 선택지 번호, 2순위 선택지 번호] × 12]
+  const s = { X: 0, D: 0, V: 0, O: 0 };
+  w.forEach((pick, i) => {
+    s[W_ITEMS[i].o[pick[0]][0]] += 2;
+    s[W_ITEMS[i].o[pick[1]][0]] += 1;
+  });
+  const order = W_KEYS.slice().sort((a, b) => s[b] - s[a] || W_KEYS.indexOf(a) - W_KEYS.indexOf(b));
+  const spread = s[order[0]] - s[order[3]];
+  const balanced = spread <= 3;
+  const pair = [order[0], order[1]].sort((a, b) => W_KEYS.indexOf(a) - W_KEYS.indexOf(b)).join("");
+  return { s, order, spread, balanced, typeKey: balanced ? "BAL" : pair, top: order[0], second: order[1], weak: order[3], weak2: order[2] };
+}
+
+function taskScore(m) { return (m & 1 ? 1 : 0) + (m & 2 ? 1 : 0) + (m & 4 ? 1 : 0) + (m & 8 ? 2 : 0); }
+
+function scoreAI(q, t) {
+  t = t || Array(24).fill(0);
+  // q = 12문항 응답(1부터), t = 업무 24개 비트마스크(시간1 반복2 못함4 목표8)
+  const Q = n => q[n - 1];
+  const track = Q(1) <= 2 ? "예비창업자 트랙" : "초기창업자 트랙";
+  const lv = Math.max(0, Q(4) - 1 - (Q(4) >= 3 && Q(5) === 1 ? 1 : 0));
+  const lvPts = lv <= 1 ? 0 : lv === 2 ? 1 : lv === 3 ? 2 : 3;
+  const typeScore = lvPts + (Q(3) - 1) + (Q(1) - 1);
+  const base = typeScore <= 3 ? "S" : typeScore <= 6 ? "M" : "L";
+  const c1 = base === "L" && !(lv >= 4 || Q(10) === 3) ? "M" : base;
+  let fin;
+  if (c1 === "L") fin = Q(7) >= 4 ? "L" : Q(7) >= 3 ? "M" : "S";
+  else if (c1 === "M") fin = Q(7) >= 3 ? "M" : "S";
+  else fin = "S";
+  const budgetNote = fin !== c1 ? "도구 예산을 늘리면 " + c1 + "형 가능" : "예산 적정";
+  const hold = Q(6) === 1;
+  const scores = t.map(taskScore);
+  const areaHit = AREAS.map((_, a) => T_ITEMS.some((it, i) => it[0] === a && scores[i] > 0));
+  const areaCount = areaHit.filter(Boolean).length;
+  const sigList = [
+    [Q(3) >= 3, "팀 3인 이상"], [areaCount >= 5, "업무 영역 5종 이상"], [lv >= 3, "AI 레벨 Lv3 이상"],
+    [Q(9) === 3, "동시 진행 업무 잦음"], [Q(10) === 3, "외부 도구 연동·자동화 필수"], [Q(11) === 3, "월 1회 이상 인수인계"]
+  ];
+  const signals = sigList.filter(x => x[0]).map(x => x[1]);
+  const n = signals.length;
+  let method;
+  if (fin === "L") method = "방식 B (L2~L3)";
+  else if (fin === "S") method = n >= 3 ? "방식 A (B 신호 많음: M형 검토)" : "방식 A";
+  else method = n >= 3 ? "방식 B (L1~L2)" : "방식 A로 시작 → 전환 기준 점검";
+  const stPre = ["예비 Stage 1 지원사업 합격 스프린트", "예비 Stage 2 MVP 기획·개발", "예비 Stage 3 사업화·초기 마케팅", "예비 Stage 3 사업화·초기 마케팅", "예비 Stage 3 사업화·초기 마케팅"];
+  const stEarly = ["초기 Stage 1 → Stage 2 지원사업·BM 고도화", "초기 Stage 1 → Stage 2 BM·제품 정비", "초기 Stage 1 → Stage 3 마케팅·영업", "초기 Stage 1 → Stage 3 마케팅·영업", "초기 Stage 1 → Stage 4 조직관리 · Stage 5 AX"];
+  const stage = (Q(1) <= 2 ? stPre : stEarly)[Q(2) - 1];
+  const knowledge = ["L0 흩어진 파일 — 폴더·회사 바이블부터", "L1에 가까움 — 규칙만 정하면 됨", "L1~L2 — 지식DB 연결부터"][Q(8) - 1];
+  const product = fin === "S" ? "스타터(S형) · 1:1 4주" : fin === "M" ? "그로스(M형) · 1:1 12주" : "프로(L형) · 1:1 12주";
+  const top5 = scores.map((sc, i) => ({ i, sc })).filter(x => x.sc >= 1).sort((a, b) => b.sc - a.sc || a.i - b.i).slice(0, 5);
+  const agentScore = {};
+  AGENTS.forEach(a => { agentScore[a] = 0; });
+  T_ITEMS.forEach((it, i) => { agentScore[it[2]] += scores[i]; });
+  return { track, lv, typeScore, base, c1, fin, budgetNote, hold, scores, areaCount, signals, method, stage, knowledge, product, top5, agentScore, pre: Q(1) <= 2 };
+}
+
+/* 업무 점수 + 성향 보완을 합친 AI 직원 추천 */
+function recommendAgents(ai, work) {
+  const bonus = {};
+  AGENTS.forEach(a => { bonus[a] = 0; });
+  if (!work.balanced) {
+    AXIS_AGENTS[work.weak].forEach(a => { bonus[a] += 2; });
+    AXIS_AGENTS[work.weak2].forEach(a => { bonus[a] += 1; });
+  }
+  const rows = AGENTS.map((a, idx) => ({
+    name: a, task: ai.agentScore[a], bonus: bonus[a], total: ai.agentScore[a] + bonus[a], idx,
+    why: [ai.agentScore[a] > 0 ? "업무 체크 " + ai.agentScore[a] + "점" : null,
+      !work.balanced && AXIS_AGENTS[work.weak].includes(a) ? W_NAME[work.weak] + " 보완" : null,
+      !work.balanced && AXIS_AGENTS[work.weak2].includes(a) ? W_NAME[work.weak2] + " 보완" : null].filter(Boolean)
+  })).filter(r => r.total > 0).sort((a, b) => b.total - a.total || b.task - a.task || a.idx - b.idx);
+  const count = ai.fin === "S" ? 4 : ai.fin === "M" ? 6 : 8;
+  return { rows, count, pick: rows.slice(0, count) };
+}
+
+function computeAll(d) {
+  const per = scorePersonality({ mode: "q", a: d.a }), work = scoreWork(d.w), ai = scoreAI(d.s, d.t);
+  return { d, per, work, ai, rec: recommendAgents(ai, work), hasTasks: Array.isArray(d.t) && d.t.some(x => x > 0) };
+}
+
+/* ===== 해석 문구 (자체 작성) ===== */
+const TYPES = {
+  XD: { name: "개척형", line: "새 판을 열고 사람을 끌어들이는 대표",
+    sum: "기회를 먼저 보고, 그 그림으로 사람과 자원을 끌어옵니다. 사업 초기에 방향을 잡고 첫 고객과 첫 지원군을 만드는 데 강합니다.",
+    str: ["아직 없는 시장과 제품을 구체적인 이야기로 풀어낸다", "처음 만난 고객·투자자·파트너를 설득해 움직인다", "막히면 방향을 바꿔 다시 시도하는 속도가 빠르다"],
+    pit: ["검증 전에 실행부터 해서 같은 비용을 두 번 쓴다", "벌여 놓은 일의 마감·증빙·후속 관리가 비기 쉽다", "새 아이디어가 생길 때마다 우선순위가 바뀌어 팀이 지친다"],
+    fit: "아이디어 발굴, 초기 고객 확보, 발표 평가, 투자 유치 미팅", care: "사업계획서의 근거 자료, 사업비 집행·정산, 출시 후 반복 운영",
+    doo: ["큰 그림을 먼저 듣고 인정한 뒤, 이번 달 검증할 가설 하나로 좁힌다", "약속은 날짜와 산출물로 적고 다음 세션 첫 5분에 확인한다"],
+    dont: ["아이디어 자체를 처음부터 반박하지 않는다", "긴 분석 과제를 한꺼번에 주지 않는다"],
+    qs: ["지금 하는 일 가운데 그만둬도 매출에 영향이 없는 것은 무엇인가요?", "이 아이디어가 틀렸다는 것을 가장 싸게 확인하는 방법은 무엇인가요?", "지난달 약속 가운데 끝내지 못한 것은 무엇이고, 누가 대신 챙길 수 있나요?"],
+    hw: ["새 아이디어는 보관함에 적어 두고 2주 뒤에 다시 본다", "핵심 가설 3개와 각각의 확인 방법·기한을 한 장으로 쓴다", "운영 담당 AI에게 주간 마감 목록을 맡기고 금요일마다 점검한다"] },
+  XV: { name: "설계형", line: "아이디어를 내고 스스로 검증하는 전략가",
+    sum: "가능성을 넓게 탐색하면서도 근거로 걸러냅니다. 사업 모델과 전략의 완성도가 높지만, 생각이 실행과 판매로 넘어가는 데 시간이 걸립니다.",
+    str: ["문제를 다시 정의해 차별화된 사업 모델을 설계한다", "자기 아이디어의 약점을 먼저 찾아낸다", "사업계획서의 논리와 근거가 탄탄하다"],
+    pit: ["더 좋은 안을 찾다가 출시와 영업이 늦어진다", "고객을 직접 만나기보다 자료로 판단하려 한다", "계획이 정교해질수록 팀이 따라가기 어려워진다"],
+    fit: "사업 모델 설계, 시장 분석, 사업계획서 작성, 피벗 판단", care: "첫 영업, 발표와 네트워킹, 꾸준한 실행",
+    doo: ["분석의 깊이를 인정하고, 언제까지 결정할지를 먼저 정한다", "세션마다 고객을 직접 만나는 실행 과제를 하나씩 넣는다"],
+    dont: ["근거 없는 낙관으로 밀어붙이지 않는다", "분석 과제를 더 얹지 않는다"],
+    qs: ["지금 가진 정보의 70%로 결정한다면 무엇을 고르시겠어요?", "이번 주에 고객 3명에게 직접 물어볼 질문 하나는 무엇인가요?", "완성도가 60%일 때 먼저 보여줄 수 있는 사람은 누구인가요?"],
+    hw: ["2주 안에 잠재 고객 5명과 통화하고 기록을 남긴다", "결정 기한을 달력에 적고 그날 결정한다", "영업 지원 AI로 첫 제안 메일 초안을 만들어 3곳에 보낸다"] },
+  XO: { name: "제작자형", line: "구상한 것을 끝까지 직접 완성하는 대표",
+    sum: "아이디어를 떠올리고 손수 결과물로 만들어 냅니다. 제품과 콘텐츠의 완성도가 높지만, 알리고 파는 일과 냉정한 검증이 뒤로 밀리기 쉽습니다.",
+    str: ["혼자서도 기획부터 결과물까지 만들어 낸다", "품질 기준이 높고 약속한 것을 끝낸다", "새 구상을 실행 가능한 계획으로 옮긴다"],
+    pit: ["제품을 다듬느라 고객 반응 확인이 늦다", "직접 다 하려다 위임과 영업이 밀린다", "시장 근거보다 내 기준의 완성도를 믿는다"],
+    fit: "MVP 제작, 콘텐츠·지식상품 개발, 서비스 품질 관리", care: "고객 검증, 가격 결정, 영업·홍보",
+    doo: ["만든 결과물을 구체적으로 인정하고, 누가 얼마에 살지를 묻는다", "미완성 상태로 보여주는 연습을 작은 단위로 시킨다"],
+    dont: ["품질 기준을 낮추라고만 말하지 않는다", "여러 채널 영업을 한꺼번에 요구하지 않는다"],
+    qs: ["이 제품을 돈 내고 쓰겠다고 말한 사람은 지금 몇 명인가요?", "지금 버전에서 빼도 고객이 모를 기능은 무엇인가요?", "대표님이 아니어도 할 수 있는 일은 무엇인가요?"],
+    hw: ["완성 전 버전을 고객 3명에게 보여주고 반응을 적는다", "주 2회, 정해진 시간에 고객에게 먼저 연락한다", "리서처 AI로 경쟁 제품 가격표를 만들어 내 가격을 다시 본다"] },
+  DV: { name: "승부사형", line: "근거를 쥐고 빠르게 밀어붙이는 성과 중심 대표",
+    sum: "숫자로 판단하고 곧바로 움직입니다. 영업과 성과 개선에 강하지만, 새로운 시도의 폭과 뒤처리 체계가 약해질 수 있습니다.",
+    str: ["지표를 보고 되는 것에 빠르게 집중한다", "협상과 설득에서 근거를 들어 밀리지 않는다", "안 되는 일을 일찍 접는다"],
+    pit: ["단기 성과에 맞추다 차별화와 장기 방향이 흐려진다", "팀원에게 날카롭게 말해 분위기가 굳는다", "성사시킨 뒤의 문서화와 인수인계가 빈다"],
+    fit: "영업, 마케팅 성과 개선, 가격 협상, 지원사업 발표", care: "새 아이템 발굴, 브랜드와 비전 서술, 운영 체계화",
+    doo: ["숫자와 사례로 말하고 결론부터 제시한다", "분기 단위의 방향 질문을 정기적으로 던진다"],
+    dont: ["근거 없는 일반론으로 조언하지 않는다", "속도를 무작정 늦추라고 하지 않는다"],
+    qs: ["3년 뒤에도 고객이 우리를 고를 이유는 무엇인가요?", "대표님이 빠져도 지금 성과가 유지되려면 무엇이 문서로 남아야 하나요?", "최근 팀원이 먼저 낸 아이디어는 무엇이었나요?"],
+    hw: ["성사된 거래 1건의 과정을 운영 담당 AI와 절차서로 남긴다", "한 달에 반나절, 새 기회만 살펴보는 시간을 잡는다", "피드백을 줄 때 잘한 점 하나를 먼저 말한다"] },
+  DO: { name: "현장지휘형", line: "정해진 목표를 속도와 체계로 해내는 실행 리더",
+    sum: "목표가 정해지면 사람과 일정을 움직여 끝냅니다. 실행력은 높지만, 무엇을 할지 정하는 단계의 탐색과 검증이 짧아질 수 있습니다.",
+    str: ["계획을 일정과 담당으로 쪼개 실제로 굴린다", "팀과 외부 파트너를 움직여 마감을 지킨다", "지원사업 수행과 사업비 관리가 안정적이다"],
+    pit: ["방향이 맞는지 따지기 전에 실행에 들어간다", "익숙한 방식을 반복해 차별화가 약해진다", "바쁘게 움직이는 것과 성과를 혼동한다"],
+    fit: "지원사업 수행, 출시 준비, 운영 안정화, 팀 관리", care: "아이템 선정, 시장 검증, 피벗 판단",
+    doo: ["실행 계획을 인정하고, 그 전에 왜 이 일인지를 한 단계 묻는다", "과제는 기한과 산출물을 분명하게 준다"],
+    dont: ["추상적인 방향 토론만 길게 하지 않는다", "실행 중인 계획을 근거 없이 뒤집지 않는다"],
+    qs: ["이 계획이 성공해도 사업이 안 될 수 있는 이유는 무엇인가요?", "경쟁사와 다른 점을 고객의 말로 한 문장으로 하면 무엇인가요?", "이번 분기에 하지 않기로 한 일은 무엇인가요?"],
+    hw: ["실행 전에 리서처 AI로 경쟁 3곳과 고객 근거를 확인한다", "한 달에 한 번, 다른 업계 사례 하나를 우리 사업에 대입해 본다", "주간 보고에 이번 주에 배운 것 한 줄을 넣는다"] },
+  VO: { name: "수호형", line: "위험을 줄이고 품질을 지키는 안정 운영자",
+    sum: "꼼꼼하게 확인하고 정해진 절차로 실수 없이 해냅니다. 신뢰도는 높지만, 불확실한 기회에 뛰어들고 밖으로 알리는 데 신중해 속도가 늦어질 수 있습니다.",
+    str: ["숫자·서류·일정에서 실수가 적다", "문제가 커지기 전에 위험을 찾아낸다", "한 번 정한 약속과 품질을 지킨다"],
+    pit: ["확신이 설 때까지 시작과 출시를 미룬다", "위험이 큰 기회를 먼저 걸러내 성장 폭이 좁아진다", "영업과 대외 활동을 뒤로 미룬다"],
+    fit: "사업비 집행·정산, 품질 관리, 재무 관리, 운영 체계화", care: "아이템 차별화, 초기 영업, 투자 유치 발표",
+    doo: ["충분한 근거와 단계별 계획을 제시한다", "작게 시험해 볼 수 있는 실험 단위로 제안한다"],
+    dont: ["준비 없이 일단 해보라고 밀지 않는다", "한 번에 큰 변화를 요구하지 않는다"],
+    qs: ["실패해도 감당할 수 있는 가장 작은 실험은 무엇인가요?", "준비가 끝났다는 기준은 무엇이고, 그 기준은 누가 정했나요?", "이번 달에 대표님을 처음 알게 된 사람은 몇 명인가요?"],
+    hw: ["2주짜리 작은 실험 하나를 정해 결과와 관계없이 끝낸다", "영업 지원 AI 초안으로 주 3곳에 먼저 연락한다", "콘텐츠 작가 AI와 사업 소개 글을 주 1회 발행한다"] },
+  BAL: { name: "조율형", line: "네 가지 방식을 고르게 쓰는 대표",
+    sum: "발상·돌파·검증·운영을 상황에 맞게 오갑니다. 1인 창업에 유리하지만, 뚜렷한 무기가 드러나지 않거나 모든 일을 직접 하려다 지칠 수 있습니다.",
+    str: ["사업 단계가 바뀌어도 필요한 역할로 옮겨 간다", "성향이 다른 팀원과 파트너 사이를 잇는다", "한쪽으로 치우친 결정을 덜 한다"],
+    pit: ["모든 일을 혼자 맡아 시간이 가장 먼저 바닥난다", "무엇으로 이기는 대표인지가 흐릿하다", "우선순위를 정하지 못하고 고르게 힘을 쓴다"],
+    fit: "1인 창업 초기, 팀 조율, 사업 단계 전환기", care: "시간 관리, 한 가지에 집중해야 하는 시기",
+    doo: ["지금 단계에서 가장 중요한 역할 한 가지를 함께 정한다", "나머지 역할을 AI 직원과 외부에 넘기는 계획을 세운다"],
+    dont: ["모든 영역의 과제를 고르게 주지 않는다", "유형이 뚜렷하지 않다는 점을 약점으로 말하지 않는다"],
+    qs: ["네 가지 가운데 할 때 시간 가는 줄 모르는 일은 무엇인가요?", "앞으로 3개월, 대표님만 할 수 있는 일 하나는 무엇인가요?", "지금 하는 일 가운데 AI나 다른 사람에게 가장 먼저 넘길 것은 무엇인가요?"],
+    hw: ["일주일 동안 한 일을 네 가지로 나눠 쓴 시간을 적는다", "시간을 가장 많이 쓴 영역의 업무 하나를 AI 직원에게 넘긴다", "3개월 동안 집중할 역할을 한 문장으로 써서 붙여 둔다"] }
+};
+
+const AX = {
+  X: { high: "기회를 먼저 알아보고 문제를 새롭게 정의합니다.", low: "차별화 포인트가 약해지고, 방향을 바꿔야 할 때를 놓치기 쉽습니다.",
+    human: "제품 비전과 브랜드를 함께 토론할 기획형 파트너", aiCan: "사례·트렌드 수집, 대안 아이디어 초안", humanMust: "새 방향을 정하는 토론과 최종 선택",
+    hw: "매주 다른 업계 사례 1개를 리서처 AI로 조사하고, 우리 사업에 적용할 점 1개를 적는다" },
+  D: { high: "사람을 설득하고 빠르게 실행으로 옮깁니다.", low: "고객·투자자 접촉이 미뤄져, 좋은 제품이 있어도 알려지지 않습니다.",
+    human: "영업·사업개발형 공동창업자 또는 첫 영입", aiCan: "제안서·후속 메일 초안, 발표 예상 질문", humanMust: "대면 영업과 신뢰 관계 형성",
+    hw: "매주 새로운 사람 3명에게 먼저 연락한다 (초안은 영업 지원 AI)" },
+  V: { high: "근거를 확인하고 위험을 미리 걸러냅니다.", low: "감에 기대어 결정하게 되고, 사업계획서의 근거가 얕아집니다.",
+    human: "재무·데이터를 봐 줄 자문 또는 파트타임 전문가", aiCan: "시장 자료 조사, 수익성 계산, 반대 의견 제시", humanMust: "최종 판단과 회계·법률 확인",
+    hw: "중요한 결정 전에 심사위원 AI에게 반대할 이유 3가지를 묻는다" },
+  O: { high: "체계를 세우고 약속한 것을 끝까지 마무리합니다.", low: "마감과 증빙이 빠지고, 일이 대표 머릿속에만 남습니다.",
+    human: "운영을 책임지고 챙길 관리형 팀원 (팀 3인 이상부터)", aiCan: "일정·회의록·증빙 목록 관리", humanMust: "집행 승인과 책임",
+    hw: "금요일 20분, 운영 담당 AI와 다음 주 마감 목록을 확인한다" }
+};
+
+const LET = {
+  E: { t: "밖에서 힘을 얻음", s: "사람을 만나고 말하면서 생각이 정리됩니다.", c: "혼자 깊이 정리하는 시간이 부족해질 수 있습니다.", m: "대화로 풀어 가는 세션이 잘 맞습니다. 끝에 결정 사항을 글로 정리해 줍니다." },
+  I: { t: "혼자 깊이 생각함", s: "충분히 생각한 뒤 결정하고 1:1 대화에 강합니다.", c: "대외 활동과 네트워킹이 미뤄질 수 있습니다.", m: "세션 전에 질문을 미리 보내 생각할 시간을 줍니다." },
+  S: { t: "현실에서 출발", s: "구체적인 사실과 실행 가능성을 봅니다.", c: "비전과 큰 그림을 말로 풀기 어려울 수 있습니다.", m: "사례와 단계별 순서로 설명합니다." },
+  N: { t: "가능성에서 출발", s: "큰 그림과 앞으로의 가능성을 봅니다.", c: "세부 실행과 당장 할 일을 건너뛸 수 있습니다.", m: "큰 방향을 먼저 이야기한 뒤 이번 주 할 일로 좁힙니다." },
+  T: { t: "논리로 결정", s: "기준과 논리로 판단하고 직설적으로 말합니다.", c: "팀원의 감정과 동기를 놓칠 수 있습니다.", m: "근거와 논리로 제안합니다. 사람 문제는 따로 질문해 꺼냅니다." },
+  F: { t: "관계로 결정", s: "사람과 관계를 살피며 팀 분위기를 만듭니다.", c: "거절이나 가격 협상 같은 어려운 결정을 미룰 수 있습니다.", m: "공감을 먼저 표현하고, 어려운 결정은 할 말의 문장까지 함께 준비합니다." },
+  J: { t: "계획대로 실행", s: "계획을 세우고 마감을 지킵니다.", c: "계획이 바뀌면 부담이 크고 방향 전환이 늦을 수 있습니다.", m: "세션 안건과 과제를 미리 정해 둡니다." },
+  P: { t: "상황에 맞춰 실행", s: "상황 변화에 유연하게 대응합니다.", c: "마감이 임박해서 움직이고 마무리가 약할 수 있습니다.", m: "과제를 짧은 주기로 쪼개고 중간 점검일을 정합니다." }
+};
+
+const TEMPER = {
+  NT: ["전략 설계형 리더", "구조와 논리로 사업을 설계합니다. 장기 전략에 강하고, 사람을 챙기는 일과 반복 운영은 의식적으로 보완해야 합니다."],
+  NF: ["비전 공감형 리더", "의미와 사람으로 팀을 이끕니다. 사명과 이야기에 강하고, 숫자 관리와 냉정한 결정은 의식적으로 보완해야 합니다."],
+  SJ: ["책임 관리형 리더", "약속과 절차로 신뢰를 쌓습니다. 안정적인 운영에 강하고, 불확실한 실험과 빠른 방향 전환은 의식적으로 보완해야 합니다."],
+  SP: ["현장 해결형 리더", "눈앞의 문제를 바로 풀어냅니다. 위기 대응과 협상에 강하고, 장기 계획과 문서화는 의식적으로 보완해야 합니다."]
+};
+function temperOf(type) { return type[1] === "N" ? (type[2] === "T" ? "NT" : "NF") : (type[3] === "J" ? "SJ" : "SP"); }
+
+function crossInsights(per, work) {
+  const has = c => per.type.includes(c), out = [], b = work.balanced;
+  if (!b && has("P") && work.weak === "O") out.push("유연한 성향에 운영이 가장 낮습니다. 마감·증빙 누락 위험이 가장 큰 조합입니다. 지원사업 비서와 운영 담당 AI에 주간 점검을 맡기는 것을 첫 과제로 둡니다.");
+  if (!b && has("J") && work.weak === "O") out.push("계획 세우기는 편하지만 반복 운영에는 힘이 덜 실립니다. 계획은 대표가, 진행 점검은 운영 담당 AI가 맡도록 나눕니다.");
+  if (!b && has("N") && work.weak === "O" && !has("P")) out.push("큰 그림을 보는 성향이라 세부 실행이 비기 쉽습니다. 할 일 관리를 AI에 맡기는 효과가 큽니다.");
+  if (!b && has("I") && work.weak === "D") out.push("혼자 집중하는 성향에 돌파가 가장 낮습니다. 대외 접촉이 가장 큰 병목이 되기 쉽습니다. 영업 지원 AI의 초안과 주간 접촉 횟수 목표가 필요합니다.");
+  if (!b && has("E") && work.weak === "D") out.push("사람을 만나는 것은 편하지만 설득해 결론을 내는 힘은 낮게 나왔습니다. 만남마다 다음 약속을 정하는 연습이 필요합니다.");
+  if (!b && has("E") && work.top === "D") out.push("대외 활동에서 힘을 얻고 돌파도 가장 높습니다. 영업과 발표는 대표가 직접 맡고, 준비와 뒤처리를 AI에 넘기는 구성이 맞습니다.");
+  if (!b && has("N") && work.top === "X") out.push("가능성을 보는 성향에 발상이 가장 높습니다. 아이디어가 넘치는 만큼 보관함과 2주 규칙으로 우선순위를 지켜야 합니다.");
+  if (!b && has("S") && work.weak === "X") out.push("현실 중심 성향에 발상이 가장 낮습니다. 차별화 포인트는 리서처 AI의 사례 조사와 고객 인터뷰로 채웁니다.");
+  if (!b && has("T") && work.top === "V") out.push("논리 중심 성향에 검증이 가장 높습니다. 비판이 날카로워 팀원이 위축될 수 있어 피드백 방식을 함께 다룹니다.");
+  if (!b && has("F") && work.weak === "V") out.push("관계 중심 성향에 검증이 가장 낮습니다. 듣기 좋은 반응만 모으기 쉬우니 심사위원 AI에게 반대 의견을 맡깁니다.");
+  if (!b && has("J") && work.top === "O") out.push("계획적인 성향에 운영이 가장 높습니다. 체계는 탄탄하지만 위임이 어렵고 변화 대응이 늦을 수 있습니다.");
+  if (has("F")) out.push("거절과 가격 협상처럼 관계가 걸린 말은 영업 지원 AI로 초안을 만들어 두면 미루지 않게 됩니다.");
+  if (!out.length) out.push("성향과 일하는 방식 사이에 두드러진 충돌은 보이지 않습니다. 상담에서 최근 실제 사례로 확인합니다.");
+  return out;
+}
+
+const LV_NAME = ["미사용", "검색 대체", "초안 작성", "맥락 유지 (프로젝트·지침)", "워크플로 설계", "자동화·연동"];
+const ORG = {
+  S: ["S형 · AI 비서실", "범용 AI 1~2개에 역할 3~7개를 나눠 쓰는 구성"],
+  M: ["M형 · AI 부서제", "4~5개 부서에 부서별 AI 직원 2~3명을 두는 구성"],
+  L: ["L형 · AI 운영조직", "총괄 AI 비서실장과 부서 AI 직원, 자동화를 함께 두는 구성"]
+};
+const AI_COACH_STYLE = {
+  X: "새 도구를 계속 바꿔 보려 합니다. 도구는 1~2개로 고정하고 첫 업무 하나를 끝내게 합니다.",
+  D: "결과를 빨리 보고 싶어 합니다. 첫 주에 실제 업무 1건을 AI로 끝내는 경험을 만듭니다.",
+  V: "AI 결과의 오류를 잘 찾아냅니다. 검수 기준표를 직접 만들게 하면 신뢰가 생깁니다.",
+  O: "지침과 양식을 잘 따릅니다. 템플릿 키트를 순서대로 적용하게 합니다."
+};
+const AI_COACH_LV = [
+  "AI 기초 사용부터 시작합니다. 세션마다 10분 실습을 넣습니다.",
+  "AI 기초 사용부터 시작합니다. 세션마다 10분 실습을 넣습니다.",
+  "프로젝트·지침 기능으로 회사 맥락을 유지하는 연습을 합니다.",
+  "역할 분리와 주간 운영 루틴 설계로 넘어갑니다.",
+  "자동화와 외부 도구 연동을 설계합니다.",
+  "자동화와 외부 도구 연동을 설계합니다."
+];
+const SAMPLES = [
+  { row: 2, at: "2026-11-16T05:10:00.000Z", n: "김예시 (예시)", org: "○○대학교 3학년", contact: "example@example.com",
+    json: JSON.stringify({ v: 2, a: [0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1], w: [[1, 3], [2, 3], [2, 0], [3, 1], [2, 3], [0, 3], [1, 0], [3, 2], [3, 2], [2, 1], [2, 1], [2, 0]], s: [1, 1, 1, 3, 2, 2, 2, 1, 2, 2, 1, 1] }) },
+  { row: 3, at: "2026-11-15T02:40:00.000Z", n: "이보기 (예시)", org: "예비창업팀", contact: "",
+    json: JSON.stringify({ v: 2, a: [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0], w: [[0, 2], [3, 1], [1, 3], [2, 0], [0, 1], [3, 2], [2, 3], [1, 0], [1, 2], [3, 1], [0, 3], [3, 0]], s: [3, 4, 2, 4, 3, 2, 3, 2, 2, 2, 1, 3] }) },
+  { row: 4, at: "2026-11-14T08:05:00.000Z", n: "박샘플 (예시)", org: "", contact: "010-0000-0000",
+    json: JSON.stringify({ v: 2, a: [0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1], w: [[0, 1], [1, 2], [0, 3], [1, 2], [2, 3], [0, 1], [0, 3], [1, 2], [0, 1], [2, 3], [0, 1], [2, 3]], s: [2, 2, 1, 2, 1, 3, 1, 2, 1, 1, 1, 2] }) }
+];
+
+/* ===== 관리자 화면: 응답 목록과 상세 리포트 ===== */
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const li = arr => arr.map(x => "<li>" + esc(x) + "</li>").join("");
+const CFG = window.PRIMINGS_DB || {};
+const HAS_SERVER = typeof supabase !== "undefined" && /^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(CFG.url || "") && !!CFG.key;
+const sb = HAS_SERVER ? supabase.createClient(CFG.url, CFG.key) : null;
+
+let rows = [], state = "loading", errMsg = "", sel = null, user = null, loginMsg = "";
+
+function parseRow(r) {
+  try {
+    const d = r.d || JSON.parse(r.json);
+    if (!Array.isArray(d.a) || d.a.length !== 20 || !Array.isArray(d.w) || d.w.length !== 12 || !Array.isArray(d.s) || d.s.length !== 12) throw new Error("형식");
+    return Object.assign({}, r, { res: computeAll(d) });
+  } catch (e) { return Object.assign({}, r, { res: null }); }
+}
+function fmt(at) { const t = new Date(at); return isNaN(t) ? String(at) : t.toLocaleString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }); }
+const typeTitle = work => TYPES[work.typeKey].name + (work.balanced ? "" : " (" + W_NAME[work.top] + " + " + W_NAME[work.second] + ")");
+
+function load() {
+  state = "loading"; errMsg = ""; render();
+  const ok = list => { rows = (list || []).map(parseRow); state = "ready"; render(); };
+  if (!HAS_SERVER) { setTimeout(() => ok(SAMPLES), 200); return; }
+  let settled = false;
+  const fail = msg => { if (settled) return; settled = true; state = "error"; errMsg = msg; render(); };
+  const timer = setTimeout(() => fail("응답을 불러오는 데 시간이 오래 걸립니다. 인터넷 연결을 확인하고 새로 고침을 눌러 주세요."), 20000);
+  sb.from("responses").select("*").order("created_at", { ascending: false }).then(res => {
+    clearTimeout(timer);
+    if (settled) return;
+    if (res.error) { fail("응답을 불러오지 못했습니다. 새로 고침을 눌러 주세요. (" + (res.error.message || "") + ")"); return; }
+    settled = true;
+    ok((res.data || []).map(x => {
+      const w = Array.isArray(x.w) ? x.w : [];
+      return { row: x.id, at: x.created_at, n: x.name, org: x.org, contact: x.contact,
+        d: { a: x.a, s: x.s, w: Array.from({ length: Math.floor(w.length / 2) }, (_, i) => [w[2 * i], w[2 * i + 1]]) } };
+    }));
+  }, () => { clearTimeout(timer); fail("응답을 불러오지 못했습니다. 인터넷 연결을 확인하고 새로 고침을 눌러 주세요."); });
+}
+
+function viewLogin() {
+  return '<section class="card login"><h2>관리자 로그인</h2><form id="loginForm" class="form"><label class="field" for="em">이메일<input id="em" type="email" autocomplete="username" required></label>' +
+    '<label class="field" for="pw">비밀번호<input id="pw" type="password" autocomplete="current-password" required></label>' +
+    (loginMsg ? '<p class="alert" role="alert">' + esc(loginMsg) + "</p>" : "") +
+    '<div class="row"><button class="btn" type="submit">로그인</button></div></form></section>';
+}
+
+function render() {
+  const v = $("view");
+  if (state === "login") { v.innerHTML = viewLogin(); return; }
+  if (state === "loading") { v.innerHTML = '<section class="card"><p class="lead">응답을 불러오는 중입니다.</p></section>'; return; }
+  if (state === "error") { v.innerHTML = '<section class="card"><p class="alert" role="alert">' + esc(errMsg) + '</p><div class="row">' + '<button class="btn" data-act="reload">새로 고침</button>' + (user ? '<button class="btn ghost" data-act="logout">로그아웃</button>' : "") + "</div></section>"; return; }
+  v.innerHTML = sel === null ? viewList() : viewReport(rows.find(r => String(r.row) === sel));
+}
+
+function viewList() {
+  const tally = {};
+  rows.forEach(r => { if (r.res) { const k = TYPES[r.res.work.typeKey].name; tally[k] = (tally[k] || 0) + 1; } });
+  let h = '<section class="card"><div class="row between"><h2>응답 ' + rows.length + '건</h2><span class="row"><button class="btn ghost" data-act="reload">새로 고침</button>' + (user ? '<button class="btn ghost" data-act="logout">로그아웃</button>' : "") + "</span></div>" +
+    (rows.length ? '<p class="fine">유형 분포: ' + esc(Object.keys(tally).map(k => k + " " + tally[k]).join(" · ")) + "</p>" : "");
+  if (!rows.length) return h + "<p>보이는 응답이 없습니다. 아직 제출된 응답이 없거나, 지금 로그인한 계정" + (user && user.email ? "(" + esc(user.email) + ")" : "") + "이 관리자 이메일이 아닌 경우입니다.</p></section>";
+  h += '<div class="tablewrap"><table><thead><tr><th>제출 시각</th><th>이름</th><th>소속</th><th>대표 유형</th><th>성향</th><th>AI</th><th>맞는 조직</th><th></th></tr></thead><tbody>' +
+    rows.map(r => r.res ? '<tr><td class="n">' + esc(fmt(r.at)) + "</td><td><b>" + esc(r.n) + "</b></td><td>" + esc(r.org) + "</td><td>" + esc(typeTitle(r.res.work)) + '</td><td class="n">' + r.res.per.type + '</td><td class="n">Lv' + r.res.ai.lv + '</td><td class="n">' + r.res.ai.fin + '형</td><td><button class="btn sm" data-open="' + esc(r.row) + '">리포트</button></td></tr>'
+      : '<tr><td class="n">' + esc(fmt(r.at)) + "</td><td><b>" + esc(r.n) + '</b></td><td colspan="6">응답 내용을 읽을 수 없습니다 (문서 ID ' + esc(r.row) + ")</td></tr>").join("") + "</tbody></table></div></section>";
+  return h;
+}
+
+function radar(s) {
+  const C = 150, R = 96, MAX = 24, pos = { X: [0, -1], D: [1, 0], O: [0, 1], V: [-1, 0] }, K = ["X", "D", "O", "V"];
+  const pt = (k, v) => [C + pos[k][0] * R * v / MAX, C + pos[k][1] * R * v / MAX];
+  let g = "";
+  [6, 12, 18, 24].forEach(v => { g += '<polygon class="grid" points="' + K.map(k => pt(k, v).join(",")).join(" ") + '"/>'; });
+  g += '<line class="grid" x1="' + (C - R) + '" y1="' + C + '" x2="' + (C + R) + '" y2="' + C + '"/><line class="grid" x1="' + C + '" y1="' + (C - R) + '" x2="' + C + '" y2="' + (C + R) + '"/>';
+  g += '<polygon class="shape" points="' + K.map(k => pt(k, s[k]).join(",")).join(" ") + '"/>';
+  K.forEach(k => { const p = pt(k, s[k]); g += '<circle class="dot" cx="' + p[0] + '" cy="' + p[1] + '" r="4"/>'; });
+  const lab = { X: [C, 26, "middle"], D: [C + R + 10, C + 5, "start"], O: [C, 2 * C - 12, "middle"], V: [C - R - 10, C + 5, "end"] };
+  K.forEach(k => { g += '<text class="lab" x="' + lab[k][0] + '" y="' + lab[k][1] + '" text-anchor="' + lab[k][2] + '">' + W_NAME[k] + " " + s[k] + "</text>"; });
+  g += '<text class="tick" x="' + (C + 4) + '" y="' + (C - R + 12) + '">24</text><text class="tick" x="' + (C + 4) + '" y="' + (C - R / 2 + 4) + '">12</text>';
+  return '<svg class="radar" viewBox="0 0 300 300" role="img" aria-label="일하는 방식 점수: 발상 ' + s.X + ", 돌파 " + s.D + ", 검증 " + s.V + ", 운영 " + s.O + ' (각 24점 만점)">' + g + "</svg>";
+}
+function bars(work) {
+  return '<ul class="bars">' + work.order.map(k => '<li><span class="bn">' + W_NAME[k] + '</span><span class="bt"><i style="width:' + Math.round(work.s[k] / 24 * 100) + '%"></i></span><span class="bv">' + work.s[k] + '</span><span class="bd">' + W_DESC[k] + "</span></li>").join("") + "</ul>";
+}
+
+function viewReport(row) {
+  const r = row.res, T = TYPES[r.work.typeKey], w = r.work, ai = r.ai, tm = TEMPER[temperOf(r.per.type)], L4 = r.per.type.split("");
+  const signals = ai.signals.filter(x => x !== "업무 영역 5종 이상");
+  let h = '<div class="row"><button class="btn ghost" data-act="back">목록으로</button></div><div id="report">';
+  h += '<section class="card hero"><p class="eyebrow">' + esc(row.n) + (row.org ? " · " + esc(row.org) : "") + (row.contact ? " · " + esc(row.contact) : "") + " · " + esc(fmt(row.at)) + " 제출</p><h2>" + esc(typeTitle(w)) + " · " + esc(r.per.type) + " · AI Lv" + ai.lv + '</h2><p class="lead">' + esc(T.line) + '</p><dl class="facts wide">' +
+    [["트랙", ai.track], ["AI 조직 유형", ORG[ai.fin][0] + (ai.fin !== ai.base ? " (기본 " + ai.base + "형에서 보정)" : "")], ["유형 점수", ai.typeScore + "점 / 9"], ["운영 방식", ai.method + (ai.pre ? " · 예비 트랙은 방식 A로 시작" : "")], ["시작 단계", ai.stage], ["자료 정리 수준", ai.knowledge], ["도구 예산", ai.budgetNote], ["참여 시간", ai.hold ? "보류 — 주 2시간 이상 확보 필요" : "진행 가능"], ["권장 상품", ai.hold ? "부트캠프·템플릿 팩·전략 컨설팅 먼저" : ai.product]]
+      .map(x => "<div><dt>" + x[0] + "</dt><dd>" + esc(x[1]) + "</dd></div>").join("") + "</dl>" +
+    '<p class="fine">방식 B 신호 ' + signals.length + "개" + (signals.length ? ": " + esc(signals.join(", ")) : "") + ". 업무 체크를 하지 않아 업무 영역 수 신호는 빼고 셌습니다.</p></section>";
+
+  h += '<section class="card"><h3>1. 리더십 스타일과 강약점</h3><div class="chart">' + radar(w.s) + bars(w) + "</div><p>" + esc(T.sum) + "</p>" +
+    '<div class="two in"><div><h4>강점</h4><ul class="list good">' + li(T.str) + '</ul></div><div><h4>빠지기 쉬운 함정</h4><ul class="list warn">' + li(T.pit) + "</ul></div></div>" +
+    '<dl class="facts wide"><div><dt>힘을 내는 국면</dt><dd>' + esc(T.fit) + "</dd></div><div><dt>조심할 국면</dt><dd>" + esc(T.care) + "</dd></div>" +
+    (w.balanced ? "" : "<div><dt>가장 높은 축 · " + W_NAME[w.top] + " " + w.s[w.top] + "</dt><dd>" + AX[w.top].high + "</dd></div><div><dt>가장 낮은 축 · " + W_NAME[w.weak] + " " + w.s[w.weak] + "</dt><dd>" + AX[w.weak].low + "</dd></div>") + "</dl>" +
+    "<h4>성향 · " + esc(r.per.type) + " · " + esc(tm[0]) + "</h4><p>" + esc(tm[1]) + '</p><div class="tablewrap"><table><thead><tr><th>지표</th><th>특징</th><th>주의</th><th>응답</th></tr></thead><tbody>' +
+    L4.map((c, i) => "<tr><td><b>" + c + "</b> " + LET[c].t + "</td><td>" + LET[c].s + "</td><td>" + LET[c].c + '</td><td class="n">' + r.per.counts[i][0] + " : " + r.per.counts[i][1] + (Math.abs(r.per.counts[i][0] - r.per.counts[i][1]) === 1 ? " (약함)" : "") + "</td></tr>").join("") +
+    '</tbody></table></div><p class="fine">간이 성향 체크 20문항 기준입니다. 3 : 2로 갈린 지표는 선호가 약하므로 상담에서 확인합니다.</p>' +
+    '<h4>성향과 일하는 방식을 함께 보면</h4><ul class="list">' + li(crossInsights(r.per, w)) + "</ul></section>";
+
+  h += '<section class="card"><h3>2. 보완할 AI 직원 구성</h3>';
+  if (w.balanced) h += "<p>네 축이 고르게 나와 특정 축을 메우는 AI 직원을 따로 꼽지 않았습니다. 상담에서 시간을 가장 많이 쓰는 일을 물어 첫 AI 직원을 정합니다.</p>";
+  else h += "<p>낮게 나온 일하는 방식을 메우는 AI 직원입니다. 가장 낮은 축에 +2, 그다음 축에 +1을 주었습니다. " + ORG[ai.fin][0].slice(0, 2) + "은 상위 " + r.rec.count + "개까지 둡니다.</p>" +
+    '<div class="tablewrap"><table><thead><tr><th>순위</th><th>AI 직원</th><th>보완 점수</th><th>근거</th></tr></thead><tbody>' +
+    r.rec.rows.map((x, i) => '<tr class="' + (i < r.rec.count ? "pick" : "") + '"><td class="n">' + (i + 1) + "</td><td>" + esc(x.name) + '</td><td class="n"><b>+' + x.total + "</b></td><td>" + esc(x.why.join(" · ")) + "</td></tr>").join("") + "</tbody></table></div>" +
+    '<p class="fine">' + W_NAME[w.weak] + " 보완: " + AXIS_AGENT_WHY[w.weak] + ". " + W_NAME[w.weak2] + " 보완: " + AXIS_AGENT_WHY[w.weak2] + ".</p>";
+  h += '<p class="fine">이번 진단에는 업무 체크가 없어 실제 업무량은 반영하지 않았습니다. 첫 업무와 최종 구성은 상담에서 업무 체크(추가 옵션)로 확정합니다.</p>' +
+    '<h4>AI 도입 코칭 포인트</h4><ul class="list"><li>' + AI_COACH_LV[ai.lv] + " (Lv" + ai.lv + " " + LV_NAME[ai.lv] + ")</li>" + (w.balanced ? "" : "<li>" + AI_COACH_STYLE[w.top] + "</li>") + (r.d.s[11] === 1 ? "<li>처음 해 보는 분야입니다. 리서처를 첫 AI 직원 후보에 반드시 넣습니다.</li>" : "") + (r.d.s[3] >= 3 && r.d.s[4] === 1 ? "<li>사용 빈도에 비해 실제 적용 경험이 없어 레벨을 한 단계 낮췄습니다. 10분 실습으로 다시 확인합니다.</li>" : "") + "</ul></section>";
+
+  h += '<section class="card"><h3>3. 팀빌딩과 공동창업자 제안</h3>';
+  if (w.balanced) h += "<p>네 축이 고르게 나와 특정 역할의 공백보다 본인의 시간 부족이 먼저 문제가 됩니다. 시간을 많이 쓰는 일부터 AI 직원에게 넘기고, 사람 영입은 매출이 생기는 역할에 맞춥니다.</p>";
+  else h += '<div class="tablewrap"><table><thead><tr><th>빈자리</th><th>AI로 먼저 메울 수 있는 부분</th><th>사람이 꼭 필요한 부분</th><th>맞는 사람</th></tr></thead><tbody>' +
+    [w.weak, w.weak2].map((k, i) => "<tr><td><b>" + W_NAME[k] + "</b> " + w.s[k] + "점" + (i === 0 ? " (1순위)" : "") + "</td><td>" + AX[k].aiCan + "</td><td>" + AX[k].humanMust + "</td><td>" + AX[k].human + "</td></tr>").join("") + "</tbody></table></div>" +
+    '<ul class="list"><li>본인과 같은 ' + W_NAME[w.top] + "·" + W_NAME[w.second] + " 중심의 사람만 모이면 " + W_NAME[w.weak] + " 공백이 그대로 남습니다. 첫 팀원은 " + W_NAME[w.weak] + " 점수가 높은 사람을 우선합니다.</li>" +
+    "<li>성향이 반대인 사람과 일하면 처음에는 불편합니다. " + (L4[2] === "T" ? "논리 중심이므로 상대의 감정 표현을 문제 제기로 받아들이는 연습이 필요합니다." : "관계 중심이므로 상대의 직설적인 지적을 공격으로 받아들이지 않는 연습이 필요합니다.") + "</li>" +
+    "<li>" + (r.d.s[2] === 1 ? "지금은 혼자입니다. 팀원을 구하기 전에 AI 직원으로 3개월 운영해 보고, 그래도 남는 공백을 사람으로 채웁니다." : "이미 함께하는 사람이 있습니다. 팀원도 같은 진단을 받아 역할을 나누면 겹침과 공백이 보입니다.") + "</li></ul>";
+  h += "</section>";
+
+  h += '<section class="card"><h3>4. 멘토링 세션 가이드</h3><div class="two in"><div><h4>이렇게 접근합니다</h4><ul class="list good">' + li(T.doo.concat(LET[L4[0]].m, LET[L4[3]].m)) + '</ul></div><div><h4>피합니다</h4><ul class="list warn">' + li(T.dont) + "</ul></div></div>" +
+    '<h4>코칭 질문</h4><ol class="list">' + li(T.qs) + "</ol>" +
+    '<h4>4주 실행 과제</h4><ol class="list">' + li(T.hw.concat(w.balanced ? [] : [AX[w.weak].hw])) + "</ol>" +
+    '<h4>세션 진행 순서</h4><div class="tablewrap"><table><thead><tr><th>회차</th><th>다룰 내용</th><th>남길 것</th></tr></thead><tbody>' +
+    "<tr><td>1회</td><td>진단 결과 설명, 강점 확인, 조심할 국면 합의, 업무 체크로 첫 업무 정하기</td><td>진단 결과서 1쪽, 첫 업무 1개</td></tr>" +
+    "<tr><td>2회</td><td>AI 직원 구성 확정, 첫 업무를 AI 직원에게 맡기는 실습</td><td>AI 조직 설계서 1장, 승인 규칙</td></tr>" +
+    "<tr><td>3회</td><td>2주 실업무 파일럿 점검, " + (w.balanced ? "시간 사용 기록 검토" : W_NAME[w.weak] + " 보완 과제 점검") + "</td><td>파일럿 기록, 고친 지침</td></tr>" +
+    "<tr><td>4회</td><td>팀빌딩 방향, 다음 3개월 목표, 단독 수행 확인</td><td>3개월 계획, 다음 진단 날짜</td></tr></tbody></table></div></section>";
+
+  h += '<section class="card"><h3>5. 응답 원본</h3><div class="tablewrap"><table><thead><tr><th>AI 활용과 창업 준비</th><th>응답</th></tr></thead><tbody>' +
+    S_ITEMS.map((it, i) => "<tr><td>Q" + (i + 1) + " " + esc(it.q) + "</td><td>" + r.d.s[i] + " " + esc(it.o[r.d.s[i] - 1]) + "</td></tr>").join("") + "</tbody></table></div>" +
+    '<div class="tablewrap"><table><thead><tr><th>일하는 방식</th><th>1순위</th><th>2순위</th></tr></thead><tbody>' +
+    W_ITEMS.map((it, i) => "<tr><td>" + (i + 1) + ". " + esc(it.q) + "</td>" + r.d.w[i].map(j => "<td>" + esc(it.o[j][1]) + ' <span class="tag">' + W_NAME[it.o[j][0]] + "</span></td>").join("") + "</tr>").join("") + "</tbody></table></div>" +
+    '<div class="row"><button class="btn" data-act="copyReport">리포트 글 전체 복사</button><span id="copyMsg" class="fine" aria-live="polite"></span></div>' +
+    '<p class="fine">스스로 답한 진단이라 실제보다 높게 답하는 경향이 있습니다. AI 레벨은 10분 실습으로, 일하는 방식은 최근 사례 질문으로 확인한 뒤 확정합니다. 채용·평가의 근거로 쓰지 않습니다.</p></section></div>';
+  return h;
+}
+
+document.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  const d = b.dataset;
+  if (d.open) { sel = d.open; render(); window.scrollTo(0, 0); return; }
+  if (d.act === "back") { sel = null; render(); window.scrollTo(0, 0); return; }
+  if (d.act === "reload") { sel = null; load(); return; }
+  if (d.act === "logout") { sel = null; sb.auth.signOut(); return; }
+  if (d.act === "copyReport") {
+    const m = $("copyMsg"), done = ok => { m.textContent = ok ? "복사했습니다" : "자동 복사가 막혀 있습니다. 화면에서 직접 선택해 복사해 주세요."; };
+    try { navigator.clipboard.writeText($("report").innerText).then(() => done(true), () => done(false)); } catch (x) { done(false); }
+  }
+});
+document.addEventListener("submit", e => {
+  if (e.target.id !== "loginForm") return;
+  e.preventDefault();
+  const em = $("em").value.trim(), pw = $("pw").value;
+  loginMsg = "";
+  sb.auth.signInWithPassword({ email: em, password: pw }).then(res => {
+    if (res.error) { loginMsg = "이메일 또는 비밀번호가 맞지 않습니다."; render(); const f = $("em"); if (f) f.value = em; }
+  });
+});
+if (!HAS_SERVER) { $("preview").hidden = false; load(); }
+else {
+  let lastUid = null;
+  sb.auth.onAuthStateChange((event, session) => {
+    const u = session ? session.user : null, uid = u ? u.id : "";
+    if (uid === lastUid) return; /* 토큰 갱신 같은 반복 알림은 무시 */
+    lastUid = uid; user = u; sel = null;
+    /* 인증 알림 안에서 바로 DB를 부르지 않도록 한 박자 늦춘다 */
+    setTimeout(() => { if (u) load(); else { state = "login"; render(); } }, 0);
+  });
+}
+
+</script>
+</body>
+</html>
